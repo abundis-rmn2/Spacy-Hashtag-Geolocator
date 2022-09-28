@@ -2,3 +2,4 @@
 /.idea/
 /venv/Scripts/
 /venv/
+/venv/pyvenv.cfg
