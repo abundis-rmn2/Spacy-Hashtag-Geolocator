@@ -8,8 +8,8 @@ import time
 #cl = Client()
 #cl.login(" betitoprendido3", "challenge/action/1")
 
-#nlp = spacy.load("en_core_web_trf")
-nlp = spacy.blank("es")
+nlp = spacy.load("en_core_web_trf")
+#nlp = spacy.blank("es")
 
 @Language.component("mention_hashtags")
 def mention_hashtags(doc):
@@ -45,6 +45,7 @@ doc = nlp(s)
 
 for token in doc:
     if not token.is_space:
+        print(token.text, token.lemma_, token.pos_)
         if token._.is_hashtag:
             #time.sleep(5)
             token_hashtag = re.sub(r'#', r'', token.text)
