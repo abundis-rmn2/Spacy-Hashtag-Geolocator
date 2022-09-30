@@ -39,20 +39,20 @@ def mention_hashtags_set_extension(doc):
 @Language.component("local_set_extension")
 def loc_set_extension(doc):
     wordlist = initialize_words("wl")
-    print(wordlist)
+    wordlistarr = initialize_words("wl").splitlines()
+    #print(wordlist)
     Token.set_extension("is_geo", default=False)
     Token.set_extension("geo_countrycode", default=None)
     print(type(wordlist))
     for token_index, token in enumerate(doc):
         if token._.is_hashtag:
             #print("token es hashtag en componente",token.text)
-            parse_tag(token, token.text, wordlist)
+            parse_tag(token, token.text, wordlist, wordlistarr)
             #if token.text in wordlist:
             #    print("lo encontró")
             #    print(token)
     return doc
 
-#none
 # Returns a list of common english terms (words)
 def initialize_words(dict_txt):
     content = None
@@ -66,12 +66,14 @@ def initialize_words(dict_txt):
     for word in content:
         #print(word)
         if ' ' in word:
-            content_clean += word.lower().rstrip('\n')+ " "
-            word = word.replace(" ", "") + " ".rstrip('\n')
-            #print("after replace", word)
             content_clean += word.lower().rstrip('\n')
+            content_clean += "\n"
+            word = word.replace(" ", "")
+            #print("after replace", word)
+            content_clean += word.lower()
         else:
-            content_clean += word.lower().rstrip('\n')+ " "
+            content_clean += word.lower().rstrip('\n')+" "
+            content_clean += "\n"
     return content_clean.rstrip('\n')
 
 def parse_sentence(sentence, wordlist):
@@ -90,7 +92,7 @@ def parse_sentence(sentence, wordlist):
 
     return new_sentence
 
-def parse_tag(token, term, wordlist):
+def parse_tag(token, term, wordlist, wordlistarr):
     #print("parse_tag", term)
     words = []
     # Remove hashtag, split by dash
@@ -98,7 +100,7 @@ def parse_tag(token, term, wordlist):
     #print("Tags despues de split", tags)
     for tag in tags:
         #print("Tags despues de split for each", tag)
-        word = find_word(token, tag, wordlist)
+        word = find_word(token, tag, wordlist, wordlistarr)
         #print("despues find_word")
         while word != None and len(tag):
             words.append(word)
@@ -106,45 +108,66 @@ def parse_tag(token, term, wordlist):
             if len(tag) == len(word): # Special case for when eating rest of word
                 break
             tag = tag[len(word):]
-            word = find_word(token, tag, wordlist)
+            word = find_word(token, tag, wordlist, wordlistarr)
     return(" ".join(words))
 
-def find_word(token, tag, wordlist):
-    print("find_word():", tag)
+def find_word(token, tag, wordlist, wordlistarr):
+    print("find_word() looking for:", tag)
     tag = tag.lower()
     i = len(tag) + 1
     while i > 1:
         i -= 1
         if tag[:i] in wordlist and len(tag[:i]):
             print("find_word() inlist:",tag[:i])
-            print (wordlist.index(tag[:i]))
-            print (wordlist[wordlist.index(tag[:i])-1] + tag[:i ])
             city = gc.search_cities(tag[:i], case_sensitive=False)
-            e = 0
-            while e < len(city):
-                if (city[e]['countrycode'] == "CA") or (city[e]['countrycode'] == "MX") or (city[e]['countrycode'] == "US"):
-                    print(i, tag[:i], "is geo")
-                    token._.is_geo = True
-                    token._.set("geo_countrycode",city[e]['countrycode'])
-                    print(city[e])
-                e += 1
+            if not len(city) == 0:
+                city_arr(city, i, tag, token)
+            elif tag[:i] in wordlistarr:
+                #print("encontro algo: tag", tag[:i])
+                #print("en el arreglo: ",wordlistarr[wordlistarr.index(tag[:i])])
+                #print("en el arreglo: ",wordlistarr[wordlistarr.index(tag[:i])-1])
+                city = gc.search_cities(wordlistarr[wordlistarr.index(tag[:i])-1], case_sensitive=False)
+                #print(city)
+                if not len(city) == 0:
+                    city_arr(city, i, tag, token)
             return tag[:i]
     return None
 
-
+def city_arr(city, i, tag, token):
+    print("tag en lista de ciudades")
+    e = 0
+    #Sort cities by population, biggest cities will get on top
+    city = sorted(city, key=lambda e: e['population'], reverse=False)
+    while e < len(city):
+        if (city[e]['countrycode'] == "CA") or (city[e]['countrycode'] == "MX") or (city[e]['countrycode'] == "US"):
+            print(i, tag[:i], "is geo")
+            token._.is_geo = True
+            token._.set("geo_countrycode", city[e]['countrycode'])
+            print(city[e])
+        e += 1
 
 nlp.add_pipe("mention_hashtags", first=True)
 nlp.add_pipe("mention_hashtags_set_extension", after="mention_hashtags")
 nlp.add_pipe("local_set_extension", after="mention_hashtags_set_extension")
 
-s = """#NorthPekin #Scott Air #cherokeetag #winnipegbench #graffiticholula #graffititoluca #canadabench #jaliscograffiti #benchguadalajara #bombasguadalajaramistrik #jasdjaws #jawscaminojalisco #tlajomulco #guadalajaragraffiti"""
+s = """#cherokeetag #NorthPekin #SanFrancisco #SanSebastianelGrande #ScottAirForceOne #BuenaVista #WestlakeVillage #winnipegbench #graffiticholula #graffititoluca #canadabench #jaliscograffiti #benchguadalajara #bombasguadalajaramistrik #jasdjaws #jawscaminojalisco #tlajomulco #guadalajaragraffiti"""
 s = re.sub(r'#', r' #', s)
 doc = nlp(s)
 
 for token in doc:
     if not token.is_space:
         print(token.text, token.lemma_, token.pos_)
-        if token._.is_geo:
+        if token._.is_hashtag:
             #time.sleep(5)
+            token_hashtag = re.sub(r'#', r'', token.text)
+            #print(token.text, " - ", cl.hashtag_info(token_hashtag).media_count)
+            print(token.text, " - hashtag")
+            if token._.is_geo:
+                # time.sleep(5)
+                # print(token.text, " - ", cl.user_info_by_username(token_mention).biography)
+                print(token.text, " - geo -", token._.geo_countrycode)
+        elif token._.is_mention:
+            #time.sleep(5)
+            token_mention = re.sub(r'@', r'', token.text)
             #print(token.text, " - ", cl.user_info_by_username(token_mention).biography)
-            print(token.text, " - geo -", token._.geo_countrycode)
+            print(token.text, " - arroba ")
