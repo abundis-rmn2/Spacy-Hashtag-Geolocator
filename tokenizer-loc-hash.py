@@ -120,7 +120,7 @@ nlp.add_pipe("mention_hashtags", first=True)
 nlp.add_pipe("mention_hashtags_set_extension", after="mention_hashtags")
 nlp.add_pipe("local_set_extension", after="mention_hashtags_set_extension")
 
-s = """#winnipegbench #canadabench #jaliscograffiti #benchguadalajara #bombasguadalajaramistrik #jasdjaws #jawscaminojalisco #tlajomulco #guadalajaragraffiti"""
+s = """#winnipegbench #graffiticholula #graffititoluca #canadabench #jaliscograffiti #benchguadalajara #bombasguadalajaramistrik #jasdjaws #jawscaminojalisco #tlajomulco #guadalajaragraffiti"""
 s = re.sub(r'#', r' #', s)
 doc = nlp(s)
 
