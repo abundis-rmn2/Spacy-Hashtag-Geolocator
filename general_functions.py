@@ -10,9 +10,10 @@ import geonamescache
 gc = geonamescache.GeonamesCache()
 
 cl = Client()
-#cl.login(" betitoprendido3", "challenge/action/1")
-#nlp = spacy.load("en_core_web_trf")
-nlp = spacy.blank("es")
+
+#nlp = spacy.load("en_core_web_trf", disable=["tok2vec", "tagger", "parser", "attribute_ruler", "lemmatizer"])
+nlp = spacy.load("en_core_web_trf")
+#nlp = spacy.blank("es")
 
 @Language.component("mention_hashtags")
 def mention_hashtags(doc):
@@ -30,23 +31,26 @@ def mention_hashtags(doc):
 @Language.component("mention_hashtags_set_extension")
 def mention_hashtags_set_extension(doc):
     hashtag_getter = lambda token: token.text.startswith('#')
-    Token.set_extension('is_hashtag', getter=hashtag_getter)
+    Token.set_extension('is_hashtag', getter=hashtag_getter, force=True)
     mention_getter = lambda token: token.text.startswith('@')
-    Token.set_extension('is_mention', getter=mention_getter)
+    Token.set_extension('is_mention', getter=mention_getter, force=True)
     return doc
 
-@Language.component("local_set_extension")
-def loc_set_extension(doc):
+@Language.component("custom_set_extension")
+def custom_set_extension(doc):
+    #Diccionario General
     wordlist = initialize_words("wl")
-    wordlistarr = initialize_words("wl").splitlines()
+    #Diccionario particular en el que se buscan palabras juntas como San francisco y Sanfrancisco (util para hashtags)
+    citieslist_arr = initialize_words("cities").splitlines()
     #print(wordlist)
-    Token.set_extension("is_geo", default=False)
-    Token.set_extension("geo_countrycode", default=None)
-    print(type(wordlist))
+    Token.set_extension("is_geo", default=False, force=True)
+    Token.set_extension("geo_countrycode", default=None, force=True)
+    Token.set_extension("geo_hashtag", default=None, force=True)
+    #print(type(wordlist))
     for token_index, token in enumerate(doc):
         if token._.is_hashtag:
             #print("token es hashtag en componente",token.text)
-            parse_tag(token, token.text, wordlist, wordlistarr)
+            parse_tag(token, token.text, wordlist, citieslist_arr)
             #if token.text in wordlist:
             #    print("lo encontró")
             #    print(token)
@@ -75,23 +79,7 @@ def initialize_words(dict_txt):
             content_clean += "\n"
     return content_clean.rstrip('\n')
 
-def parse_sentence(sentence, wordlist):
-    #print("parse_sentence")
-    new_sentence = "" # output
-    terms = sentence.split(' ')
-    #print(terms)
-    for term in terms:
-        #print(term)
-        if not term == "":
-            if term[0] == '#': # this is a hashtag, parse it
-                new_sentence += parse_tag(term, wordlist)
-            else: # Just append the word
-                new_sentence += term
-            new_sentence += " "
-
-    return new_sentence
-
-def parse_tag(token, term, wordlist, wordlistarr):
+def parse_tag(token, term, wordlist, citieslist_arr):
     #print("parse_tag", term)
     words = []
     # Remove hashtag, split by dash
@@ -99,7 +87,7 @@ def parse_tag(token, term, wordlist, wordlistarr):
     #print("Tags despues de split", tags)
     for tag in tags:
         #print("Tags despues de split for each", tag)
-        word = find_word(token, tag, wordlist, wordlistarr)
+        word = find_word(token, tag, wordlist, citieslist_arr)
         #print("despues find_word")
         while word != None and len(tag):
             words.append(word)
@@ -107,17 +95,17 @@ def parse_tag(token, term, wordlist, wordlistarr):
             if len(tag) == len(word): # Special case for when eating rest of word
                 break
             tag = tag[len(word):]
-            word = find_word(token, tag, wordlist, wordlistarr)
+            word = find_word(token, tag, wordlist, citieslist_arr)
     return(" ".join(words))
 
 def find_word(token, tag, wordlist, wordlistarr):
-    print("find_word() looking for:", tag)
+    #print("find_word() looking for:", tag)
     tag = tag.lower()
     i = len(tag) + 1
     while i > 1:
         i -= 1
         if tag[:i] in wordlist and len(tag[:i]):
-            print("find_word() inlist:",tag[:i])
+            #print("find_word() inlist:",tag[:i])
             city = gc.search_cities(tag[:i], case_sensitive=False)
             if not len(city) == 0:
                 city_arr(city, i, tag, token)
@@ -133,40 +121,19 @@ def find_word(token, tag, wordlist, wordlistarr):
     return None
 
 def city_arr(city, i, tag, token):
-    print("tag en lista de ciudades")
+    #print("tag en lista de ciudades")
     e = 0
     #Sort cities by population, biggest cities will get on top
     city = sorted(city, key=lambda e: e['population'], reverse=False)
     while e < len(city):
         if (city[e]['countrycode'] == "CA") or (city[e]['countrycode'] == "MX") or (city[e]['countrycode'] == "US"):
-            print(i, tag[:i], "is geo")
+            #print(i, tag[:i], "is geo")
             token._.is_geo = True
             token._.set("geo_countrycode", city[e]['countrycode'])
-            print(city[e])
+            token._.set("geo_hashtag", city[e]['name'])
+            #print(city[e])
         e += 1
 
 nlp.add_pipe("mention_hashtags", first=True)
 nlp.add_pipe("mention_hashtags_set_extension", after="mention_hashtags")
-nlp.add_pipe("local_set_extension", after="mention_hashtags_set_extension")
-
-s = """#cherokeetag #NorthPekin #SanFrancisco #SanSebastianelGrande #ScottAirForceOne #BuenaVista #WestlakeVillage #winnipegbench #graffiticholula #graffititoluca #canadabench #jaliscograffiti #benchguadalajara #bombasguadalajaramistrik #jasdjaws #jawscaminojalisco #tlajomulco #guadalajaragraffiti"""
-s = re.sub(r'#', r' #', s)
-doc = nlp(s)
-
-for token in doc:
-    if not token.is_space:
-        print(token.text, token.lemma_, token.pos_)
-        if token._.is_hashtag:
-            #time.sleep(5)
-            token_hashtag = re.sub(r'#', r'', token.text)
-            #print(token.text, " - ", cl.hashtag_info(token_hashtag).media_count)
-            print(token.text, " - hashtag")
-            if token._.is_geo:
-                # time.sleep(5)
-                # print(token.text, " - ", cl.user_info_by_username(token_mention).biography)
-                print(token.text, " - geo -", token._.geo_countrycode)
-        elif token._.is_mention:
-            #time.sleep(5)
-            token_mention = re.sub(r'@', r'', token.text)
-            #print(token.text, " - ", cl.user_info_by_username(token_mention).biography)
-            print(token.text, " - arroba ")
+nlp.add_pipe("custom_set_extension", after="mention_hashtags_set_extension")
