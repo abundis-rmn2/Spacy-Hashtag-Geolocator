@@ -6,6 +6,7 @@ from instagrapi import Client
 import time
 import re
 import geonamescache
+import difflib
 
 gc = geonamescache.GeonamesCache()
 
@@ -50,7 +51,10 @@ def custom_set_extension(doc):
     for token_index, token in enumerate(doc):
         if token._.is_hashtag:
             #print("token es hashtag en componente",token.text)
-            parse_tag(token, token.text, wordlist, citieslist_arr)
+            if token._.is_geo:
+                print("ya tiene data geo")
+            else:
+                parse_tag(token, token.text, wordlist, citieslist_arr)
             #if token.text in wordlist:
             #    print("lo encontró")
             #    print(token)
@@ -98,30 +102,40 @@ def parse_tag(token, term, wordlist, citieslist_arr):
             word = find_word(token, tag, wordlist, citieslist_arr)
     return(" ".join(words))
 
-def find_word(token, tag, wordlist, wordlistarr):
+#https://www.w3resource.com/python-exercises/string/python-data-type-string-exercise-92.php
+def string_similarity(str1, str2):
+    result =  difflib.SequenceMatcher(a=str1.lower(), b=str2.lower(), autojunk=False)
+    return result.ratio()
+
+def find_word(token, tag, wordlist, city_list_arr):
     #print("find_word() looking for:", tag)
     tag = tag.lower()
     i = len(tag) + 1
     while i > 1:
         i -= 1
         if tag[:i] in wordlist and len(tag[:i]):
-            #print("find_word() inlist:",tag[:i])
-            city = gc.search_cities(tag[:i], case_sensitive=False)
-            if not len(city) == 0:
-                city_arr(city, i, tag, token)
-            elif tag[:i] in wordlistarr:
-                #print("encontro algo: tag", tag[:i])
-                #print("en el arreglo: ",wordlistarr[wordlistarr.index(tag[:i])])
-                #print("en el arreglo: ",wordlistarr[wordlistarr.index(tag[:i])-1])
-                city = gc.search_cities(wordlistarr[wordlistarr.index(tag[:i])-1], case_sensitive=False)
-                #print(city)
-                if not len(city) == 0:
-                    city_arr(city, i, tag, token)
+            #print("find_word in wordlist inlist:",tag[:i])
+            #print([string for string in wordlistarr if tag[:i] in string])
+            for city in city_list_arr:
+                if string_similarity(tag[:i], city) > .7 and len(tag[:i]) > 5:
+                    print(tag[:i], city)
+                #if tag[:i] in city and len(tag[:i]) > 5:
+                    #print(string)
+                    city = gc.search_cities(tag[:i], case_sensitive=False)
+                    if not len(city) == 0:
+                        city_arr(city, i, tag[:i], token)
+                    elif tag[:i] in city_list_arr:
+                        print("encontro algo: tag", tag[:i])
+                        #print("en el arreglo: ",wordlistarr[wordlistarr.index(tag[:i])])
+                        print("en el arreglo: ",city_list_arr[city_list_arr.index(tag[:i])-1])
+                        city = gc.search_cities(city_list_arr[city_list_arr.index(tag[:i]) - 1], case_sensitive=False)
+                        #print(city)
+                        #if not len(city) == 0:
+                            #city_arr(city, i, tag[:i], token)
             return tag[:i]
     return None
 
 def city_arr(city, i, tag, token):
-    #print("tag en lista de ciudades")
     e = 0
     #Sort cities by population, biggest cities will get on top
     city = sorted(city, key=lambda e: e['population'], reverse=False)
@@ -130,8 +144,9 @@ def city_arr(city, i, tag, token):
             #print(i, tag[:i], "is geo")
             token._.is_geo = True
             token._.set("geo_countrycode", city[e]['countrycode'])
-            token._.set("geo_hashtag", city[e]['name'])
+            token._.set("geo_hashtag", tag)
             #print(city[e])
+            print("tag en lista de ciudades", city[e])
         e += 1
 
 nlp.add_pipe("mention_hashtags", first=True)

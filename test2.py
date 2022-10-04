@@ -45,7 +45,17 @@ else:
     s = re.sub(r'#', r' #', s)
     doc = nlp(s)
 
-    for token in doc:
+    out = []
+    seen = set()
+    for word in doc:
+        if word.text not in seen:
+            out.append(word)
+        seen.add(word.text)
+    # now out has "unique" tokens
+
+    print("unique tokens:", len(out))
+
+    for token in out:
         if not token.is_space:
             print(token.text, token.lemma_, token.pos_)
             if token._.is_hashtag:
