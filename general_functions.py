@@ -11,8 +11,8 @@ import difflib
 gc = geonamescache.GeonamesCache()
 cl = Client()
 #nlp = spacy.load("en_core_web_trf", disable=["tok2vec", "tagger", "parser", "attribute_ruler", "lemmatizer"])
-nlp = spacy.load("en_core_web_trf")
-#nlp = spacy.blank("es")
+#nlp = spacy.load("en_core_web_trf")
+nlp = spacy.blank("es")
 
 # Setting Spacy set extension once.
 Token.set_extension("is_city", default=None)
@@ -99,7 +99,7 @@ def mention_hashtags_set_extension(doc):
 def hashtag_splitter_tagger(doc):
     for token_index, token in enumerate(doc):
         if token._.is_hashtag:
-            print("Token is_hashtag",token.text)
+            print("Token is_hashtag and parsing to split: ",token.text)
             parse_tag(token, token.text)
     return doc
 
@@ -211,6 +211,57 @@ def string_similarity(str1, str2):
     result =  difflib.SequenceMatcher(a=str1.lower(), b=str2.lower(), autojunk=False)
     return result.ratio()
 
+@Language.component("graffiti_entities_lookup")
+def graffiti_entities_lookup(doc):
+    for token_index, token in enumerate(doc):
+        if token._.is_hashtag:
+            print("Token is_hashtag and looking for entities",token.text)
+            #looking for words end with graffiti
+            if token.text.endswith('graffiti'):
+                if token._.is_graffiti_lingo:
+                    print("token is graffiti lingo skip")
+                elif token._.is_railroad_lingo:
+                    print("token is railroad lingo skip")
+                else:
+                    writer = token.text[1:-8]
+                    if not len(writer) == 0:
+                        print("---------------- Not lingo", writer, len(writer))
+                        if not re.search(r"\b" + re.escape(writer) + r"\b", wordlist):
+                            print("---------------- Not in wordlist", writer, len(writer))
+                            print("writer name maybe:", writer)
+            # looking for words end with crew
+            elif token.text.endswith('crew'):
+                if token._.is_graffiti_lingo:
+                    print("token is graffiti lingo skip")
+                elif token._.is_railroad_lingo:
+                    print("token is railroad lingo skip")
+                else:
+                    crew = token.text[1:-4]
+                    if not len(crew) == 0:
+                        print("---------------- Not lingo", crew, len(crew))
+                        if not re.search(r"\b" + re.escape(crew) + r"\b", wordlist):
+                            print("---------------- Not in wordlist", crew, len(crew))
+                            print("crew name maybe:", crew)
+            # looking for words bigger than 5 and smaller than 8, counting #, 4 to 7 maybe a writer name
+            elif len(token.text) >= 5 and len(token.text) <= 7:
+                writer = token.text[1:]
+                print("OOV writername", writer)
+                # and the string not in wordlist knowned ass OOV
+                if not re.search(r"\b" + re.escape(writer) + r"\b", wordlist):
+                    print("---------------- Not in wordlist", writer, len(writer))
+                    print("writer name maybe:", writer)
+            # looking for words bigger than 3 and smaller than 5, counting #, 2 to 4 maybe a crew acronnym
+            elif len(token.text) >= 3 and len(token.text) <= 4:
+                crew = token.text[1:]
+                print("OOV crew", crew)
+                # and the string not in wordlist knowned ass OOV
+                if not re.search(r"\b" + re.escape(crew) + r"\b", wordlist):
+                    print("---------------- Not in wordlist", crew, len(crew))
+                    print("crew name maybe:", crew)
+    return doc
+
+
 nlp.add_pipe("mention_hashtags", first=True)
 nlp.add_pipe("mention_hashtags_set_extension", after="mention_hashtags")
 nlp.add_pipe("hashtag_splitter_tagger", after="mention_hashtags_set_extension")
+nlp.add_pipe("graffiti_entities_lookup", after="hashtag_splitter_tagger")

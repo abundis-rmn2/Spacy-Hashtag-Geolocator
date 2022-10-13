@@ -1,7 +1,6 @@
 fr8
 3d
 style
-graffiti
 focused
 blocks
 threedimensional
@@ -65,7 +64,6 @@ blockbuster
 simple
 letters
 characterize
-graffitis
 background
 possible
 silver
@@ -143,7 +141,6 @@ painted
 next
 create
 scenario
-crew
 group
 collaborating
 together
@@ -444,7 +441,6 @@ tv
 marker
 computer style
 crazy
-crew
 cta
 cutting tips
 lines

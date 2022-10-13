@@ -2,6 +2,7 @@ from general_functions import *
 import time
 import mysql.connector
 import json
+from spacy.vocab import Vocab
 
 global_time = time.time()
 
@@ -38,7 +39,7 @@ else:
     #for doc in nlp.pipe(texts, disable=["tok2vec", "tagger", "parser", "attribute_ruler", "lemmatizer"])
         #assert doc.has_annotation("DEP")
     #    print(doc)
-
+    i=0
     for post in posts:
         start_time = time.time()
         # cl.login("betitoprendido3", "challenge/action/1")
