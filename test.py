@@ -63,9 +63,12 @@ else:
                     # time.sleep(5)
                     # except:
                     # print("An exception occurred")
-                    if token._.is_geo:
-                        print("Countrycode -", token._.geo_countrycode)
-                        print("Lemma hashtag -", token._.geo_hashtag)
+                    if token._.is_city:
+                        print("----------- City Hashtag -", token._.geo_hashtag, "countrycode -", token._.geo_countrycode)
+                    if token._.is_graffiti_lingo:
+                        print("----------- Graffiti Hashtag -", token._.graffiti_hashtag)
+                    if token._.is_railroad_lingo:
+                        print("----------- Railroad Hashtag -", token._.railroad_hashtag)
                 elif token._.is_mention:
                     token_mention = re.sub(r'@', r'', token.text)
                     # if cl.user_info_by_username(token_mention):

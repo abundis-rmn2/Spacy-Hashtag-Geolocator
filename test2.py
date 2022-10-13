@@ -30,11 +30,11 @@ else:
 
     post_list_str = ""
     for post in posts:
-        print(post[11])
+        #print(post[11])
         post_list_str += post[11]
         #feel slower
 
-    print (post_list_str)
+    #print (post_list_str)
     start_time = time.time()
     # cl.login("betitoprendido3", "challenge/action/1")
     s = """#SanDiegoBenching #TlajoGraff #ScottAirForceOne 
@@ -43,19 +43,30 @@ else:
             #jawscaminojalisco#tlajomulco#guadalajaragraffiti"""
     s = post_list_str
     s = re.sub(r'#', r' #', s)
-    doc = nlp(s)
+    post_list_str = re.sub(r'#', r' #', post_list_str)
+
 
     out = []
     seen = set()
-    for word in doc:
-        if word.text not in seen:
+    for word in post_list_str.split(" "):
+        if word not in seen:
+            print(word)
             out.append(word)
-        seen.add(word.text)
+        seen.add(word)
     # now out has "unique" tokens
 
-    print("unique tokens:", len(out))
+    unique_post_list_str = ""
+    for word in out:
+        print(word)
+        unique_post_list_str += word + " "
 
-    for token in out:
+    print("unique tokens:", len(out))
+    print("whole corpus:", len(post_list_str.split(" ")))
+
+    #doc = nlp(post_list_str)
+    doc = nlp(unique_post_list_str)
+
+    for token in doc:
         if not token.is_space:
             print(token.text, token.lemma_, token.pos_)
             if token._.is_hashtag:
@@ -68,9 +79,12 @@ else:
                 # time.sleep(5)
                 # except:
                 # print("An exception occurred")
-                if token._.is_geo:
-                    print("Countrycode -", token._.geo_countrycode)
-                    print("Lemma hashtag -", token._.geo_hashtag)
+                if token._.is_city:
+                    print("City Hashtag -", token._.geo_hashtag, "countrycode -", token._.geo_countrycode)
+                elif token._.is_graffiti_lingo:
+                    print("Graffiti Hashtag -", token._.graffiti_hashtag)
+                elif token._.is_railroad_lingo:
+                    print("Railroad Hashtag -", token._.railroad_hashtag)
             elif token._.is_mention:
                 token_mention = re.sub(r'@', r'', token.text)
                 # if cl.user_info_by_username(token_mention):
