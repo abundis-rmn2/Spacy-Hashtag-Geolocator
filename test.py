@@ -8,7 +8,7 @@ global_time = time.time()
 
 c = open("config.json")
 config = json.load(c)
-MUID = 'fr8heaven_1_hashtagRecent_6_3708ca94'
+MUID = 'freightgraffiti_1_hashtagTop_9_5d8799fe'
 try:
     cnx = mysql.connector.connect(user=config["SQL"]["username"],
                                   password=config["SQL"]["password"],
@@ -43,14 +43,16 @@ else:
     for post in posts:
         start_time = time.time()
         # cl.login("betitoprendido3", "challenge/action/1")
-        s = """#SanDiegoBenching #TlajoGraff #ScottAirForceOne 
+        #s = """#SanDiegoBenching #TlajoGraff #ScottAirForceOne
         #cherokeetag#NorthPekin#SanFrancisco#SanSebastianelGrande#BuenaVista#WestlakeVillage 
         #winnipegbench #graffiticholula #graffititoluca #canadabench#jaliscograffiti#benchguadalajara#bombasguadalajaramistrik#jasdjaws 
         #jawscaminojalisco#tlajomulco#guadalajaragraffiti"""
         s = post[11]
-        #s = re.sub(r'#', r' #', s)
+        s = re.sub(r'#', r' #', s)
         doc = nlp(s)
         print(doc)
+        #clean array in
+        token_detected_dict = []
         for token in doc:
             if not token.is_space:
                 print(token.text, token.lemma_, token.pos_)
@@ -65,17 +67,35 @@ else:
                     # except:
                     # print("An exception occurred")
                     if token._.is_city:
+                        #falta agregar lat-long
                         print("----------- City Hashtag -", token._.geo_hashtag, "countrycode -", token._.geo_countrycode)
+                        token_detected_dict.append((token_hashtag, "city", token._.geo_hashtag, token._.geo_countrycode))
                     if token._.is_graffiti_lingo:
                         print("----------- Graffiti Hashtag -", token._.graffiti_hashtag)
+                        token_detected_dict.append((token_hashtag, "graffiti_lingo", token._.graffiti_hashtag))
                     if token._.is_railroad_lingo:
                         print("----------- Railroad Hashtag -", token._.railroad_hashtag)
+                        token_detected_dict.append((token_hashtag, "railroad_lingo", token._.railroad_hashtag))
+                    if token._.is_custom_entity:
+                        print("----------- Entity Hashtag -", token._.custom_entity_cat, token._.custom_entity_text )
+                        token_detected_dict.append((token_hashtag, "entity", token._.custom_entity_cat, token._.custom_entity_text ))
                 elif token._.is_mention:
                     token_mention = re.sub(r'@', r'', token.text)
                     # if cl.user_info_by_username(token_mention):
                     # print(token.text, " - ", cl.user_info_by_username(token_mention).biography)
                     # time.sleep(5)
                     print(token.text, " - arroba ")
+        print("----------- Hashtag detected :")
+        print(token_detected_dict)
+        token_detected_json = json.dumps(token_detected_dict)
+        print(token_detected_json)
+        cnx.reconnect()
+        innercursor = cnx.cursor()
+        sql_detected = "UPDATE data_media SET hashtag_detection = %s WHERE id = %s"
+        val = (token_detected_json, post[0])
+        innercursor.execute(sql_detected, val)
+        cnx.commit()
+        cnx.close()
         print("post time --- %s seconds ---" % (time.time() - start_time))
 
 print("total time --- %s seconds ---" % (time.time() - global_time))

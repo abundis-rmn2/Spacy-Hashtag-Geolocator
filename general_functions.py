@@ -18,11 +18,15 @@ nlp = spacy.blank("es")
 Token.set_extension("is_city", default=None)
 Token.set_extension("is_graffiti_lingo", default=None)
 Token.set_extension("is_railroad_lingo", default=None)
+Token.set_extension("is_custom_entity", default=None)
+
 # Metadata
 Token.set_extension("geo_countrycode", default=None)
 Token.set_extension("geo_hashtag", default=None)
 Token.set_extension("graffiti_hashtag", default=None)
 Token.set_extension("railroad_hashtag", default=None)
+Token.set_extension("custom_entity_cat", default=None)
+Token.set_extension("custom_entity_text", default=None)
 
 # Function to init wordlists
 def initialize_words(dict_txt, space_strip = False):
@@ -250,6 +254,9 @@ def graffiti_entities_lookup(doc):
                 if not re.search(r"\b" + re.escape(writer) + r"\b", wordlist):
                     print("---------------- Not in wordlist", writer, len(writer))
                     print("writer name maybe:", writer)
+                    token._.set("is_custom_entity", True)
+                    token._.set("custom_entity_cat", "writer")
+                    token._.set("custom_entity_text", writer)
             # looking for words bigger than 3 and smaller than 5, counting #, 2 to 4 maybe a crew acronnym
             elif len(token.text) >= 3 and len(token.text) <= 4:
                 crew = token.text[1:]
@@ -258,6 +265,9 @@ def graffiti_entities_lookup(doc):
                 if not re.search(r"\b" + re.escape(crew) + r"\b", wordlist):
                     print("---------------- Not in wordlist", crew, len(crew))
                     print("crew name maybe:", crew)
+                    token._.set("is_custom_entity", True)
+                    token._.set("custom_entity_cat", "crew")
+                    token._.set("custom_entity_text", crew)
     return doc
 
 

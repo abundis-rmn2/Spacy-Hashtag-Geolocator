@@ -381,7 +381,6 @@ sticker
 spread
 stickers
 placed
-hello my name
 popular
 letter
 calligraphic
