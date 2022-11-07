@@ -417,6 +417,7 @@ synonym
 artist
 all
 city
+allcity
 back
 background
 battle
@@ -436,11 +437,9 @@ cap
 fat
 skinny
 character
-tv
 marker
 computer style
 crazy
-cta
 cutting tips
 lines
 dis
@@ -461,8 +460,9 @@ fly
 fresh
 front
 getting up
+gettingup
 going over
-tco
+goingover
 grease
 pencil
 griffin
@@ -519,7 +519,11 @@ third
 rail
 3d
 throwup
+throwups
+bomb
+bombing
 top to bottom
+toptobottom
 t2b
 toy
 toys
@@ -534,6 +538,7 @@ window
 white
 trains
 whole car
+wholecar
 train
 writer
 bench
@@ -542,3 +547,5 @@ bencher
 canvas
 graff
 spot
+hiphop
+fatcap

@@ -8,7 +8,7 @@ global_time = time.time()
 
 c = open("config.json")
 config = json.load(c)
-MUID = 'freightgraffiti_1_hashtagTop_9_5d8799fe'
+MUID = 'asoter_1_hashtagTop_9_cec6fcb9'
 try:
     cnx = mysql.connector.connect(user=config["SQL"]["username"],
                                   password=config["SQL"]["password"],
