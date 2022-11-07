@@ -3,3 +3,5 @@
 /venv/Scripts/
 /venv/
 /venv/pyvenv.cfg
+/curso/
+config.json
