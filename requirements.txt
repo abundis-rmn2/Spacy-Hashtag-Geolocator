@@ -4,3 +4,4 @@ geonamescache
 instagrapi
 mysql_connector_python
 spacy
+Pillow
