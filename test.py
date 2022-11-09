@@ -2,13 +2,18 @@ from general_functions import *
 import time
 import mysql.connector
 import json
+import argparse
 from spacy.vocab import Vocab
 
+parser = argparse.ArgumentParser(description='Paso de parámetros')
+parser.add_argument("-MUID", dest="p_MUID", help="MUID to fetch")
+params = parser.parse_args()
 global_time = time.time()
 
 c = open("config.json")
 config = json.load(c)
-MUID = 'asoter_1_hashtagTop_9_cec6fcb9'
+#MUID = 'asoter_1_hashtagTop_9_cec6fcb9'
+MUID = params.p_MUID
 try:
     cnx = mysql.connector.connect(user=config["SQL"]["username"],
                                   password=config["SQL"]["password"],
