@@ -109,23 +109,23 @@ def hashtag_splitter_tagger(doc):
 
 # Code taken from this answer - https://stackoverflow.com/a/20518476/19824551
 def parse_tag(token, term):
-    print("parse_tag", term)
+    ##print("parse_tag", term)
     words = []
     # Remove hashtag, split by dash
     tags = term[1:].split(' ')
-    print("tag without #", tags)
+    ##print("tag without #", tags)
     for tag in tags:
         # This loop will look for a word in wordlist, if find something take this word away from hashtag
         # for example the whole hashtag (token) is #freightgraffitiSanFrancisco, this script will look from the start of the string
         # will find "freight" - > use it in find_word() and strip it away from the whole hashtag
         # then will use the string "graffitiSanFrancisco", and then SanFransisco
-        print("Tag after word stripping", tag)
+        ##print("Tag after word stripping", tag)
         # Here its looking fot the word in the wordlist
         word = find_word(token, tag)
-        print("despues find_word")
+        ##print("despues find_word")
         while word != None and len(tag):
             words.append(word)
-            print("algo pasa?")
+            ##print("algo pasa?")
             if len(tag) == len(word): # Special case for when eating rest of word
                 break
             tag = tag[len(word):]
@@ -134,7 +134,7 @@ def parse_tag(token, term):
 
 def find_word(token, tag):
     # Called from parse_tag()
-    print("find_word() looking for:", tag)
+    ##print("find_word() looking for:", tag)
     tag = tag.lower()
     i = len(tag) + 1
     while i > 1:
@@ -142,12 +142,12 @@ def find_word(token, tag):
         #print(tag, tag[:i])
         #if tag[:i] in wordlist and len(tag[:i]) > 3: #will do the work, but may flag false positives, next conditional works better but may be slower
         if re.search(r"\b" + re.escape(tag[:i]) + r"\b", wordlist) and len(tag[:i]) > 0: #https://stackoverflow.com/questions/4154961/find-substring-in-string-but-only-if-whole-words
-            print("find_word in wordlist:",tag[:i])
+            ##print("find_word in wordlist:",tag[:i])
             # If a word in globallist is finded will look for it in the city array [Guadalajara, San Franisco, sanfrancisco] ---- This one have all the cities with spaces already stripped and append
             # or any of the two lingo dicts -> graffiti and railroad
             for city in citieslist_arr:
                 if string_similarity(tag[:i], city) > .9 and len(tag[:i]) > 5:
-                    print("Similarity", tag[:i], city) # Long list of cities, similarity has to real high almost 1
+                    ##print("Similarity", tag[:i], city) # Long list of cities, similarity has to real high almost 1
                 #if tag[:i] in city and len(tag[:i]) > 5:
                     #print("Tag is in city name", tag[:i], city) # Long list of cities that includes common lenguage words vgr find_word() looking for: rollingcanvas | find_word in wordlist: rolling tag is in city name: rolling - rolling meadows
                 #if tag[:i] == city:
@@ -167,15 +167,15 @@ def find_word(token, tag):
 
             for graff_lingo in graffiti_lingo_arr:
                 if re.search(r"\b" + re.escape(tag[:i]) + r"\b", graff_lingo):
-                    print("in graffiti_lingo_arr:")
-                    print("Found inside", tag[:i], graff_lingo) #
+                    ##print("in graffiti_lingo_arr:")
+                    ##print("Found inside", tag[:i], graff_lingo) #
                     lingo_arr(tag[:i], token, 'is_graffiti_lingo')
 
             for railroad_lingo in railroad_lingo_arr:
                 #if re.search(r"\b" + re.escape(tag[:i]) + r"\b", graff_lingo):
                 if string_similarity(tag[:i], railroad_lingo) > .9 and len(tag[:i]) > 3:
-                    print("in railroad_lingo_arr: ")
-                    print("Found inside", tag[:i], railroad_lingo)  #
+                    ##print("in railroad_lingo_arr: ")
+                    ##print("Found inside", tag[:i], railroad_lingo)  #
                     lingo_arr(tag[:i], token, 'is_railroad_lingo')
             return tag[:i]
     return None
@@ -184,31 +184,33 @@ def city_arr(city, i, tag, token):
     e = 0
     #Sort cities by population, biggest cities will get on top
     city = sorted(city, key=lambda e: e['population'], reverse=False)
+    ##print(city)
     #Take more populated city and set countrycode to token
-    if (city[0]['countrycode'] == "CA") or (city[0]['countrycode'] == "MX") or (city[0]['countrycode'] == "US") and tag in city[0]['name'].lower(): #Just for México, Canada and USA
-    #if tag in city[0]['name'].lower(): # Any Country
-        print(i, tag, "is geo")
-        token._.set("is_city", True)
-        token._.set("geo_countrycode", city[0]['countrycode'])
-        token._.set("geo_hashtag", tag)
-        print("Hashtag", token.text, "located at:")
-        print( city[0])
-        e += 1
+    if city:
+        if (city[0]['countrycode'] == "CA") or (city[0]['countrycode'] == "MX") or (city[0]['countrycode'] == "US") and tag in city[0]['name'].lower(): #Just for México, Canada and USA
+        #if tag in city[0]['name'].lower(): # Any Country
+            ##print(i, tag, "is geo")
+            token._.set("is_city", True)
+            token._.set("geo_countrycode", city[0]['countrycode'])
+            token._.set("geo_hashtag", tag)
+            ##print("Hashtag", token.text, "located at:")
+            ##print( city[0])
+            e += 1
 
 def lingo_arr(tag, token, lingo_extension):
     if lingo_extension == 'is_graffiti_lingo':
-        print("setting", lingo_extension)
-        print(token)
+        ##print("setting", lingo_extension)
+        ##print(token)
         #token._.is_graffiti_lingo: True
         token._.set("is_graffiti_lingo", True)
         token._.set("graffiti_hashtag", tag)
-        print(token._.is_graffiti_lingo)
+        ##print(token._.is_graffiti_lingo)
     elif lingo_extension == 'is_railroad_lingo':
-        print("setting", lingo_extension)
-        print(token)
+        ##print("setting", lingo_extension)
+        ##print(token)
         token._.set("is_railroad_lingo", True)
         token._.set("railroad_hashtag", tag)
-        print(token._.is_railroad_lingo)
+        ##print(token._.is_railroad_lingo)
 
 #https://www.w3resource.com/python-exercises/string/python-data-type-string-exercise-92.php
 def string_similarity(str1, str2):

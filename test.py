@@ -30,7 +30,9 @@ except mysql.connector.Error as err:
 else:
     print("Looking for caption in MUID:", MUID)
     cursor = cnx.cursor()
-    cursor.execute("SELECT * FROM data_media WHERE MUID IN ('%s') " % (MUID))
+    #cursor.execute("SELECT * FROM data_media WHERE MUID IN ('%s') " % (MUID))
+    #sql_detected = "UPDATE data_media SET hashtag_detection = %s WHERE id = %s"
+    cursor.execute("SELECT * FROM data_media WHERE (MUID IN ('%s') AND hashtag_detection is null)" % (MUID))
     posts = cursor.fetchall()
     print("MUID found :", len(posts))
 
@@ -54,6 +56,7 @@ else:
         #jawscaminojalisco#tlajomulco#guadalajaragraffiti"""
         s = post[11]
         s = re.sub(r'#', r' #', s)
+        print("Stripping hashtags and looking for entities at: ",s)
         doc = nlp(s)
         print(doc)
         #clean array in
