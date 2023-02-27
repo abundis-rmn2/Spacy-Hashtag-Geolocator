@@ -33,6 +33,9 @@ WORKDIR /home/${_USER}/app
 RUN pip install https://github.com/hoefling/so-59927844/releases/download/0.1/blis-0.4.1-cp37-cp37m-linux_armv7l.whl
 RUN pip install https://github.com/hoefling/so-59927844/releases/download/0.1/spacy-2.2.3-cp37-cp37m-linux_armv7l.whl
 
+RUN pip install pytest pytest-timeout jsonschema mock
+RUN pytest $(python -c "import spacy; print(spacy.__path__[0])")
+
 RUN pip install -r requirements.txt
 
 CMD bash
